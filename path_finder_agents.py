@@ -384,80 +384,76 @@ class AStarAgent(Agent):
 
     def __init__(self, env):
         """Connects to the next available port.
-
-        Args: 
+        Args:
             env: A reference to an environment.
-
         """
 
         # Make a connection to the environment using the superclass constructor
-        Agent.__init__(self,env)
-        
+        Agent.__init__(self, env)
+
         # Get initial percepts
         self.percepts = env.initial_percepts()
-        
-        # Initializes the frontier with the initial postion 
+
+        # Initializes the frontier with the initial postion
         self.frontier = [[self.percepts['current_position']]]
-        
+
         # Initializes list of visited nodes for multiple path prunning
         self.visited = []
-        self.cost = [0]
 
     def act(self):
         """Implements the agent action
         """
 
-        path = self.frontier.pop() #retirei o caminho da fronteira 
-        cost = self.cost.pop(0)
-        path_dict = {cost + distance.euclidean(path[-1],self.percepts['target']): path[-1]}
-
-        for p in self.frontier:
-            path_dict[cost + distance.euclidean(p[-1],self.percepts['target'])] = p
-
-        path_dict = collections.OrderedDict(sorted(path_dict.items())) #Ordena meu dict
-
-        if len(path) == 1:
-            opa = True
-            menor_path = [list(path_dict.values())[0]]
-        else :
-            opa=False
-            menor_path = list(path_dict.values())[0]
+        # Select a path from the frontier
+        path = self.frontier.pop(0)
 
         # Visit the last node in the path
-        action = {'visit_position': menor_path[-1], 'path': menor_path} 
-        # The agente sends a position and the full path to the environment, the environment can plot the path in the room 
+        action = {'visit_position': path[-1], 'path': path}
+        self.actionFinally = {'visit_position': path[-1], 'path': path}
+        # The agente sends a position and the full path to the environment, the environment can plot the path in the room
         self.percepts = self.env.signal(action)
-            
-        viable_neighbors =  self.percepts['neighbors']
 
-        # If the agent is not stuck
+        # Add visited node
+        self.visited.append(path[-1])
+
+        # From the list of viable neighbors given by the environment
+        # Select a random neighbor that has not been visited yet
+
+        viable_neighbors = self.percepts['neighbors']
+
         if viable_neighbors:
-            insertFrontier = True
-            for n in viable_neighbors:
-                for cycle in path:
-                    if(n == cycle).all():
-                        insertFrontier = False
-                        break
+            distances = []
+            for neighbor in viable_neighbors:
+                distances.append(distance.euclidean(
+                    neighbor, self.percepts['target']))
+
+            for neighbor in viable_neighbors:
+                n_max = max(distances)
+                n_pos = distances.index(n_max)
+                if(n_max <= distance.euclidean(path[-1], self.percepts['target']) + 0.5):
+                    insertFrontier = True
+
+                    for cycle in path:
+                        if(viable_neighbors[n_pos] == cycle).all():
+                            insertFrontier = False
+                            break
 
                     for aux in self.visited:
-                        if (n == aux).all():
+                        if (viable_neighbors[n_pos] == aux).all():
                             insertFrontier = False
                             break
 
                     if insertFrontier:
-                        self.frontier = [path + [n]] + self.frontier
-                        self.cost = [cost + distance.euclidean(path[-1],n)] + self.cost
-                # Append neighbor to the path and add it to the frontier
-                
-            
+                        self.frontier = [
+                            path + [viable_neighbors[n_pos]]] + self.frontier
+                distances[n_pos] = -9999999
 
     def run(self):
         """Keeps the agent acting until it finds the target
         """
-
         # Run agent
         while (self.percepts['current_position'] != self.percepts['target']).any() and self.frontier:
             self.act()
-        print(self.percepts['current_position'])
-
-
+            print(self.percepts['current_position'])
+        for i in range(1000):
+            self.percepts = self.env.signal(self.actionFinally)
