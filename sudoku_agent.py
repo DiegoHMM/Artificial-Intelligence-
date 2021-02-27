@@ -1,16 +1,15 @@
 from definitions import Agent
 import copy
+import time
 from os import system
 
 
 class SudokuAgent(Agent):
     ''' Implements an agent that solves a sudoku
-
     '''
 
     def __init__(self, env, print_iterations=False):
         ''' Class constructor
-
         Args: 
             env: Environment representing the sudoku
             print_iterations: Flag that tells the agent whether to print the sudoku
@@ -25,7 +24,6 @@ class SudokuAgent(Agent):
 
     def act(self):
         ''' Solves a sudoku recursively
-
         '''
 
         for i in range(len(self.sudoku)): # For each row
@@ -46,24 +44,27 @@ class SudokuAgent(Agent):
                             self.sudoku[i][j] = 0
                     return
 
+        input('Solved - Press ENTER to see solution')
         pp_sudoku(self.sudoku)
+        input('Press ENTER to get out of here')
+
 
 
 def pp_sudoku(sudoku):
     ''' Prints as sudoku
-
     Args:
         sudoku: a sudoku
     '''
 
     for i in range(len(sudoku)):
         if i % 3 == 0:
-            print('-------------------------------')
+            print('-------------------------------', flush=True)
         row = ''
         for j in range(len(sudoku[0])):
             if j % 3 == 0:
                 row = row + '|'
             row = row + ' ' + str(sudoku[i][j]) + ' '
-        print(row + '|')
+        print(row + '|', flush=True)
 
-    print('-------------------------------')
+    print('-------------------------------', flush=True)
+    #time.sleep(1)
