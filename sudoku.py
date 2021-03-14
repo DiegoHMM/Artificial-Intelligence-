@@ -6,11 +6,10 @@ import copy
 
 class Sudoku(Environment):
     '''Implements a sudoku environment
-
     '''
+
     def __init__(self, sudoku, make_arc_cosistent=True):
         ''' Class constructor
-
         Args:
             sudoku: A matrix representing the sudoku game
             make_arc_cosistent: A flag indicating whether the environment is acr consistent
@@ -33,7 +32,6 @@ class Sudoku(Environment):
 
     def signal(self, action):
         ''' Signals the current state of the problem to the agent 
-
         Args:
             action: Contains the position that the agent wants to change
                 and the value the agent wants to put in that position
@@ -50,7 +48,6 @@ class Sudoku(Environment):
 
     def ini_csp(self):
         ''' Builds a CSP representation of the sudoku game 
-
         '''
 
         for i in range(len(self.sudoku)):
@@ -86,20 +83,64 @@ class Sudoku(Environment):
 
     # TODO
     def apply_GAC(self):
-        pass
-        
+        to_do = []
+        for row in self.csp:
+            for cell in row:
+                for const in cell['C']:
+                    to_do.append({'X': cell['X'], 'C': const})
+        print('*************************************************')
+        print(to_do)
+        print('*************************************************')
+        ''' Runs until to_do is empty
+        '''
+        while to_do:
+            arc = to_do.pop(0)  # Removing an arc
+
+            scope = arc['C'].scope.copy()
+            scope.remove(arc['X'])
+
+            x, y = arc['X']
+
+            try:
+                domain_1 = self.csp[x][y]['D'].copy()
+                domain_2 = self.csp[scope[0][0]][scope[0][1]]['D']
+            except TypeError:
+                domain_2 = scope
+
+            for a in domain_1:
+                removeValue = True
+                for b in domain_2:
+                    if arc['C'].condition(a, b):
+                        removeValue = False
+                        break
+                if removeValue:
+                    # Pruning domain
+                    domain_1.remove(a)
+
+            if self.csp[x][y]['D'] == domain_1:
+                continue
+
+            self.csp[x][y]['D'] = domain_1
+
+            for const in self.csp[x][y]['C']:
+                scope_aux = const.scope.copy()
+                scope_aux.remove(arc['X'])
+
+                # Refreshing to_do list if needed
+                if scope_aux[0] != self.csp[scope[0][0]][scope[0][1]]['X']:
+                    cell = {'X': scope_aux[0], 'C': const}
+                    to_do.append(cell) if cell not in to_do else to_do
+
+
 def is_viable(sudoku, i, j, v):
     ''' Auxiliary method that verifies whether a value, v, can be assigned to position [i,j] in the sudoku
-
     Args:
         sudoku: 
         i: row index
         j: column index
         v: value
-
     Returns:
         True if the move is viable or False, otherwise
-
     '''
 
     # Different from other cell in the same row
@@ -124,12 +165,10 @@ def is_viable(sudoku, i, j, v):
     return True
 
 
-
 class Constraint:
     ''' Defines the interface for a constraint 
     
     '''
-
 
     def __init__(self, scope, condition):
         self.scope = scope
@@ -171,6 +210,3 @@ class EqNumConstraint(Constraint):
     def apply(self, sudoku):
         return self.condition(sudoku[self.scope[0][0]][self.scope[0][1]],
                               self.scope[1])
-
-
-

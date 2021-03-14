@@ -14,9 +14,6 @@ print(kb)
 
 ag = LogicalAgent(kb)
 
-# Derive all the logical consequences of KB
+# # Derive all the logical consequences of KB
 consequences = ag.bottom_up()
 print(consequences)
-
-# Prove 'a'
-print(ag.top_down(['a']))
