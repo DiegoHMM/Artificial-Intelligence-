@@ -3,11 +3,17 @@ class Askable():
     '''
 
     def __init__(self,atom):
-        self.atom = atom
+        self.head = atom
+        self.value = False
+        self.answered = False
   
     def __str__(self):
-        return 'askable ' + self.atom + '.'
+        return 'askable ' + self.head + '.'
 
+    def ask(self):
+        self.answered = True
+        self.value = True if str(input(f"Is {self.head} true? (y/n)")) == "y"  else False
+        return self.value
 
 class Clause():
     ''' Implements a representation of definite clauses
@@ -39,7 +45,6 @@ class KB():
   
     def __init__(self, statements = []):
         ''' Class constructor
-
         Args:
             statements: a list of statements
         '''
@@ -63,7 +68,6 @@ class KB():
         
         Args: 
             atom
-
         Returns:
             clauses tha have 'atom' as head
         '''
@@ -72,7 +76,7 @@ class KB():
             return self.c_for_a[atom]
         else:
           return set()
-    
+          
     def __str__(self):
         ''' String representation for the class
         '''
