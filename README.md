@@ -1,1 +1,1 @@
-# Atividade Inteligência Artificial
+# BCC-325 - Artificial Intelligence - Practical Activities
